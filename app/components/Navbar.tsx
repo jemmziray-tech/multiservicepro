@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import ThemeToggle from "./ThemeToggle"; // IMPORT ADDED
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +10,6 @@ export default function Navbar() {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   return (
-    // UPDATED: Added dark:bg-gray-900 and dark:border-gray-800
     <nav className="bg-white dark:bg-gray-900 shadow-md w-full sticky top-0 z-50 border-b border-transparent dark:border-gray-800 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -40,9 +38,6 @@ export default function Navbar() {
               Client Portal
             </Link>
 
-            {/* THE NEW DARK MODE TOGGLE (DESKTOP) */}
-            <ThemeToggle />
-
             <Link href="/book" className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition shadow-md">
               Book Now
             </Link>
@@ -50,8 +45,6 @@ export default function Navbar() {
 
           {/* Mobile Menu Button (Shows on small screens) */}
           <div className="md:hidden flex items-center gap-4">
-            {/* Show toggle on mobile too, next to the hamburger menu */}
-            <ThemeToggle />
             <button onClick={toggleMenu} className="text-gray-700 dark:text-gray-300 outline-none">
               {isOpen ? <X className="h-8 w-8" /> : <Menu className="h-8 w-8" />}
             </button>
