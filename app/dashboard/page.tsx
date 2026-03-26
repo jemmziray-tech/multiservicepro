@@ -1,31 +1,81 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, DollarSign, CalendarCheck, TrendingUp, Activity, ArrowUpRight, Loader2 } from "lucide-react";
-import { supabase } from "../lib/supabase"; // Our connection cable
+import { useRouter } from "next/navigation"; // For redirection
+import { 
+  Users, 
+  DollarSign, 
+  CalendarCheck, 
+  TrendingUp, 
+  Activity, 
+  ArrowUpRight, 
+  Loader2, 
+  LogOut, 
+  RefreshCw 
+} from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
 
-  // 1. Function to fetch real bookings from Supabase
+  // 1. Security Check & Data Fetching
+  useEffect(() => {
+    const checkUserAndFetchData = async () => {
+      setLoading(true);
+      
+      // Check if user is logged in
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        // No user found? Send them to login immediately
+        router.push("/login");
+        return;
+      }
+
+      setUser(user);
+
+      // If we are here, user is logged in. Fetch the bookings.
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setBookings(data);
+      }
+      setLoading(false);
+    };
+
+    checkUserAndFetchData();
+  }, [router]);
+
+  // 2. Logout Function
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
+  // 3. Manual Refresh Function
   const fetchBookings = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('bookings')
       .select('*')
-      .order('created_at', { ascending: false }); // Newest bookings first
-
-    if (!error && data) {
-      setBookings(data);
-    }
+      .order('created_at', { ascending: false });
+    if (data) setBookings(data);
     setLoading(false);
   };
 
-  // 2. Run the fetch function as soon as the page loads
-  useEffect(() => {
-    fetchBookings();
-  }, []);
+  if (loading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
@@ -35,14 +85,22 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mt-6">
           <div>
             <h1 className="text-3xl font-extrabold text-blue-900">Management Dashboard</h1>
-            <p className="text-gray-500 mt-1">Real-time business data for Logistics, IT, and Agriculture.</p>
+            <p className="text-gray-500 mt-1">Logged in as: <span className="text-blue-600 font-medium">{user?.email}</span></p>
           </div>
-          <button 
-            onClick={fetchBookings}
-            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md flex items-center gap-2"
-          >
-            Refresh Data
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={fetchBookings}
+              className="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-bold hover:bg-gray-200 transition flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="bg-red-50 text-red-600 px-4 py-2.5 rounded-lg font-bold hover:bg-red-600 hover:text-white transition flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" /> Logout
+            </button>
+          </div>
         </div>
 
         {/* High-Level Statistics */}
@@ -99,7 +157,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-700 font-medium">
-                {bookings.length === 0 ? (
+                {bookings.length === 0 && !loading ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-gray-400">No bookings found in database.</td>
                   </tr>
