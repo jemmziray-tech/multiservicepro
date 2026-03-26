@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion"; // For smooth animations
 import { 
   Users, DollarSign, CalendarCheck, MessageSquare, 
   Loader2, LogOut, RefreshCw, Mail, Check, Reply 
@@ -16,6 +17,17 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const router = useRouter();
+
+  // --- Animation Settings ---
+  const containerVars = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
+
+  const itemVars = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.4 } }
+  };
 
   useEffect(() => {
     const checkUserAndFetchData = async () => {
@@ -48,7 +60,7 @@ export default function DashboardPage() {
   const handleStatusChange = async (bookingId: number, newStatus: string) => {
     setUpdatingId(bookingId);
     const { error } = await supabase.from('bookings').update({ status: newStatus }).eq('id', bookingId);
-    if (error) alert("Failed to update status: " + error.message);
+    if (error) alert("Error: " + error.message);
     else setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
     setUpdatingId(null);
   };
@@ -63,14 +75,14 @@ export default function DashboardPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'In Progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Approved': return 'bg-purple-100 text-purple-800 border-purple-200';
-      default: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Completed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
+      case 'In Progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800';
+      case 'Approved': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800';
+      default: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800';
     }
   };
 
-  if (loading && !user) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-blue-600" /></div>;
+  if (loading && !user) return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950"><Loader2 className="w-12 h-12 animate-spin text-blue-600" /></div>;
 
   const totalBookings = bookings.length;
   const uniqueClientsCount = new Set(bookings.map(b => b.phone)).size;
@@ -80,115 +92,135 @@ export default function DashboardPage() {
   const unreadMessagesCount = messages.filter(m => m.status === 'New').length;
 
   return (
-    <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <main className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-6 lg:p-8 transition-colors duration-500">
+      <motion.div 
+        className="max-w-7xl mx-auto space-y-8"
+        initial="hidden"
+        animate="visible"
+        variants={containerVars}
+      >
         
-        {/* Dashboard Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mt-6">
+        {/* Header */}
+        <motion.div variants={itemVars} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
           <div>
-            <h1 className="text-3xl font-extrabold text-blue-900">Management Dashboard</h1>
-            <p className="text-gray-500 mt-1">Logged in as: <span className="text-blue-600 font-medium">{user?.email}</span></p>
+            <h1 className="text-3xl font-extrabold text-blue-900 dark:text-white">Management Dashboard</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Logged in as: <span className="text-blue-600 dark:text-blue-400 font-medium">{user?.email}</span></p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/marketing" className="bg-orange-50 text-orange-600 px-4 py-2.5 rounded-lg font-bold hover:bg-orange-600 hover:text-white transition flex items-center gap-2">
-              Go to Marketing Admin &rarr;
+            <Link href="/marketing" className="bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 px-4 py-2.5 rounded-lg font-bold hover:bg-orange-600 hover:text-white transition-all flex items-center gap-2">
+              Marketing Admin &rarr;
             </Link>
-            <button onClick={refreshData} className="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-bold hover:bg-gray-200 transition flex items-center gap-2">
+            <button onClick={refreshData} className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center gap-2 shadow-sm">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </button>
-            <button onClick={handleLogout} className="bg-red-50 text-red-600 px-4 py-2.5 rounded-lg font-bold hover:bg-red-600 hover:text-white transition flex items-center gap-2">
+            <button onClick={handleLogout} className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-lg font-bold hover:bg-red-600 hover:text-white transition flex items-center gap-2 shadow-sm">
               <LogOut className="w-4 h-4" /> Logout
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        {/* High-Level Statistics */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Earned Revenue</h3><p className="text-2xl font-bold text-green-600 mt-1">TZS {formattedRevenue}</p></div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Total Bookings</h3><p className="text-2xl font-bold text-gray-900 mt-1">{totalBookings} Requests</p></div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Unique Clients</h3><p className="text-2xl font-bold text-gray-900 mt-1">{uniqueClientsCount}</p></div>
-          <div className={`bg-white p-6 rounded-2xl shadow-sm border ${unreadMessagesCount > 0 ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}><h3 className="text-gray-500 text-sm font-medium">Unread Messages</h3><p className={`text-2xl font-bold mt-1 ${unreadMessagesCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>{unreadMessagesCount} {unreadMessagesCount === 1 ? 'Message' : 'Messages'}</p></div>
+          {[
+            { label: "Earned Revenue", val: `TZS ${formattedRevenue}`, color: "text-green-600 dark:text-green-400" },
+            { label: "Total Bookings", val: totalBookings, color: "text-gray-900 dark:text-white" },
+            { label: "Unique Clients", val: uniqueClientsCount, color: "text-gray-900 dark:text-white" },
+            { 
+              label: "Unread Messages", 
+              val: unreadMessagesCount, 
+              color: unreadMessagesCount > 0 ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white",
+              special: unreadMessagesCount > 0 ? "border-red-300 bg-red-50 dark:bg-red-950/20 dark:border-red-900/50" : ""
+            }
+          ].map((stat, i) => (
+            <motion.div 
+              key={i} 
+              variants={itemVars}
+              whileHover={{ scale: 1.03, y: -5 }}
+              className={`bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 ${stat.special}`}
+            >
+              <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">{stat.label}</h3>
+              <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.val}</p>
+            </motion.div>
+          ))}
         </div>
 
-        {/* The Two Main Tables Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          {/* LEFT: Bookings Table */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <CalendarCheck className="text-blue-600 w-5 h-5" /> Recent Bookings
+          {/* Recent Bookings Section */}
+          <motion.div variants={itemVars} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <CalendarCheck className="text-blue-600 dark:text-blue-400 w-5 h-5" /> Recent Bookings
               </h2>
             </div>
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="sticky top-0 bg-white shadow-sm">
-                  <tr className="bg-white text-gray-500 text-xs uppercase tracking-wider">
+                <thead className="sticky top-0 bg-white dark:bg-gray-900 shadow-sm">
+                  <tr className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
                     <th className="p-4 font-medium">Client</th>
                     <th className="p-4 font-medium">Service</th>
                     <th className="p-4 font-medium">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 text-gray-700 text-sm">
-                  {bookings.length === 0 ? (
-                    <tr><td colSpan={3} className="p-8 text-center text-gray-400">No bookings yet.</td></tr>
-                  ) : (
-                    bookings.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50 transition">
-                        <td className="p-4">
-                          <p className="font-bold text-gray-900">{item.full_name}</p>
-                          <p className="text-xs text-gray-500">{item.phone}</p>
-                        </td>
-                        <td className="p-4 font-medium text-blue-600">{item.service}</td>
-                        <td className="p-4">
-                          <select
-                            value={item.status || 'Pending'}
-                            onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                            disabled={updatingId === item.id}
-                            className={`appearance-none outline-none border px-2 py-1 rounded-full text-xs font-bold uppercase cursor-pointer ${getStatusColor(item.status || 'Pending')}`}
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-gray-700 dark:text-gray-300 text-sm">
+                  {bookings.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                      <td className="p-4">
+                        <p className="font-bold text-gray-900 dark:text-white">{item.full_name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{item.phone}</p>
+                      </td>
+                      <td className="p-4 font-medium text-blue-600 dark:text-blue-400">{item.service}</td>
+                      <td className="p-4">
+                        <select
+                          value={item.status || 'Pending'}
+                          onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                          disabled={updatingId === item.id}
+                          className={`appearance-none outline-none border px-2 py-1 rounded-full text-xs font-bold uppercase cursor-pointer ${getStatusColor(item.status || 'Pending')}`}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Approved">Approved</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          </motion.div>
 
-          {/* RIGHT: Client Inbox */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <MessageSquare className="text-orange-500 w-5 h-5" /> Client Inbox
+          {/* Client Inbox Section */}
+          <motion.div variants={itemVars} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <MessageSquare className="text-orange-500 dark:text-orange-400 w-5 h-5" /> Client Inbox
               </h2>
             </div>
             
-            <div className="p-4 space-y-4 max-h-[500px] overflow-y-auto bg-gray-50">
-              {messages.length === 0 ? (
-                <div className="text-center p-8 text-gray-400">No messages found.</div>
-              ) : (
-                messages.map((msg) => (
-                  <div key={msg.id} className={`bg-white p-5 rounded-xl border shadow-sm transition-all ${msg.status === 'New' ? 'border-blue-300 border-l-4 border-l-blue-600' : 'border-gray-200 opacity-75'}`}>
+            <div className="p-4 space-y-4 max-h-[500px] overflow-y-auto bg-gray-50 dark:bg-gray-950/50">
+              <AnimatePresence>
+                {messages.map((msg) => (
+                  <motion.div 
+                    key={msg.id}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className={`p-5 rounded-xl border shadow-sm transition-all ${msg.status === 'New' ? 'bg-white dark:bg-gray-900 border-blue-300 dark:border-blue-900 border-l-4 border-l-blue-600' : 'bg-gray-50/50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 opacity-75'}`}
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                          {msg.name} {msg.status === 'New' && <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">New</span>}
+                        <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                          {msg.name} {msg.status === 'New' && <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">New</span>}
                         </h3>
-                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-1"><Mail className="w-3 h-3" /> {msg.email} • {msg.phone || 'No phone'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1"><Mail className="w-3 h-3" /> {msg.email}</p>
                       </div>
                       
-                      {/* ACTION BUTTONS: Reply & Mark Read */}
                       <div className="flex gap-2">
-                        {/* THE NEW REPLY BUTTON */}
                         <a 
-                          href={`mailto:${msg.email}?subject=Reply from MultiServicePro&body=Hi ${msg.name},%0D%0A%0D%0ARegarding your message:%0D%0A"${msg.message}"%0D%0A%0D%0A`}
-                          className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-2 rounded-full transition flex items-center justify-center"
+                          href={`mailto:${msg.email}?subject=Reply from MultiServicePro&body=Hi ${msg.name},%0D%0A%0D%0ARegarding your inquiry:%0D%0A"${msg.message}"%0D%0A%0D%0A`}
+                          className="bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 p-2 rounded-full transition hover:scale-110"
                           title="Reply via Email"
                         >
                           <Reply className="w-4 h-4" />
@@ -198,7 +230,7 @@ export default function DashboardPage() {
                           <button 
                             onClick={() => markMessageRead(msg.id)}
                             disabled={updatingId === msg.id}
-                            className="bg-gray-100 hover:bg-green-100 text-gray-600 hover:text-green-700 p-2 rounded-full transition"
+                            className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 p-2 rounded-full transition hover:text-green-600"
                             title="Mark as Read"
                           >
                             {updatingId === msg.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
@@ -207,19 +239,18 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     
-                    <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                      <p className="text-xs font-bold text-gray-400 uppercase mb-1 border-b pb-1">Interest: <span className="text-gray-700">{msg.service_interest}</span></p>
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{msg.message}</p>
+                    <div className="mt-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{msg.message}</p>
                     </div>
-                  </div>
-                ))
-              )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
 
         </div>
 
-      </div>
+      </motion.div>
     </main>
   );
 }
