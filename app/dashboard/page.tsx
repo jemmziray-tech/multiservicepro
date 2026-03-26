@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   Users, DollarSign, CalendarCheck, MessageSquare, 
-  Loader2, LogOut, RefreshCw, Mail, Check
+  Loader2, LogOut, RefreshCw, Mail, Check, Reply 
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]); // NEW: State for messages
+  const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -31,18 +31,12 @@ export default function DashboardPage() {
     checkUserAndFetchData();
   }, [router]);
 
-  // UPGRADED: Now fetches BOTH bookings and messages at the same time
   const refreshData = async () => {
     setLoading(true);
-    
-    // Fetch Bookings
     const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
     if (bData) setBookings(bData);
-
-    // Fetch Messages
     const { data: mData } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
     if (mData) setMessages(mData);
-
     setLoading(false);
   };
 
@@ -51,7 +45,6 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
-  // Update Booking Status
   const handleStatusChange = async (bookingId: number, newStatus: string) => {
     setUpdatingId(bookingId);
     const { error } = await supabase.from('bookings').update({ status: newStatus }).eq('id', bookingId);
@@ -60,7 +53,6 @@ export default function DashboardPage() {
     setUpdatingId(null);
   };
 
-  // NEW: Update Message Status (Mark as Read)
   const markMessageRead = async (messageId: number) => {
     setUpdatingId(messageId);
     const { error } = await supabase.from('contact_messages').update({ status: 'Read' }).eq('id', messageId);
@@ -80,14 +72,11 @@ export default function DashboardPage() {
 
   if (loading && !user) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-blue-600" /></div>;
 
-  // 🧮 LIVE DASHBOARD MATH
   const totalBookings = bookings.length;
   const uniqueClientsCount = new Set(bookings.map(b => b.phone)).size;
   const completedJobsCount = bookings.filter(b => b.status === 'Completed').length;
   const estimatedRevenue = completedJobsCount * 150000;
   const formattedRevenue = new Intl.NumberFormat('en-TZ').format(estimatedRevenue);
-  
-  // NEW MATH: Count how many messages say "New"
   const unreadMessagesCount = messages.filter(m => m.status === 'New').length;
 
   return (
@@ -100,7 +89,6 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-extrabold text-blue-900">Management Dashboard</h1>
             <p className="text-gray-500 mt-1">Logged in as: <span className="text-blue-600 font-medium">{user?.email}</span></p>
           </div>
-          
           <div className="flex flex-wrap gap-3">
             <Link href="/marketing" className="bg-orange-50 text-orange-600 px-4 py-2.5 rounded-lg font-bold hover:bg-orange-600 hover:text-white transition flex items-center gap-2">
               Go to Marketing Admin &rarr;
@@ -116,30 +104,16 @@ export default function DashboardPage() {
 
         {/* High-Level Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h3 className="text-gray-500 text-sm font-medium">Earned Revenue</h3>
-            <p className="text-2xl font-bold text-green-600 mt-1">TZS {formattedRevenue}</p>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h3 className="text-gray-500 text-sm font-medium">Total Bookings</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{totalBookings} Requests</p>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h3 className="text-gray-500 text-sm font-medium">Unique Clients</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{uniqueClientsCount}</p>
-          </div>
-          <div className={`bg-white p-6 rounded-2xl shadow-sm border ${unreadMessagesCount > 0 ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
-            <h3 className="text-gray-500 text-sm font-medium">Unread Messages</h3>
-            <p className={`text-2xl font-bold mt-1 ${unreadMessagesCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-              {unreadMessagesCount} {unreadMessagesCount === 1 ? 'Message' : 'Messages'}
-            </p>
-          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Earned Revenue</h3><p className="text-2xl font-bold text-green-600 mt-1">TZS {formattedRevenue}</p></div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Total Bookings</h3><p className="text-2xl font-bold text-gray-900 mt-1">{totalBookings} Requests</p></div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Unique Clients</h3><p className="text-2xl font-bold text-gray-900 mt-1">{uniqueClientsCount}</p></div>
+          <div className={`bg-white p-6 rounded-2xl shadow-sm border ${unreadMessagesCount > 0 ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}><h3 className="text-gray-500 text-sm font-medium">Unread Messages</h3><p className={`text-2xl font-bold mt-1 ${unreadMessagesCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>{unreadMessagesCount} {unreadMessagesCount === 1 ? 'Message' : 'Messages'}</p></div>
         </div>
 
         {/* The Two Main Tables Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          {/* LEFT: Bookings Table (Slightly more compact) */}
+          {/* LEFT: Bookings Table */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -164,7 +138,6 @@ export default function DashboardPage() {
                         <td className="p-4">
                           <p className="font-bold text-gray-900">{item.full_name}</p>
                           <p className="text-xs text-gray-500">{item.phone}</p>
-                          <p className="text-xs text-gray-400">{item.preferred_date}</p>
                         </td>
                         <td className="p-4 font-medium text-blue-600">{item.service}</td>
                         <td className="p-4">
@@ -210,19 +183,28 @@ export default function DashboardPage() {
                         <p className="text-xs text-gray-500 flex items-center gap-1 mt-1"><Mail className="w-3 h-3" /> {msg.email} • {msg.phone || 'No phone'}</p>
                       </div>
                       
-                      {/* Action Button: Mark as Read */}
-                      {msg.status === 'New' ? (
-                        <button 
-                          onClick={() => markMessageRead(msg.id)}
-                          disabled={updatingId === msg.id}
-                          className="bg-gray-100 hover:bg-green-100 text-gray-600 hover:text-green-700 p-2 rounded-full transition"
-                          title="Mark as Read"
+                      {/* ACTION BUTTONS: Reply & Mark Read */}
+                      <div className="flex gap-2">
+                        {/* THE NEW REPLY BUTTON */}
+                        <a 
+                          href={`mailto:${msg.email}?subject=Reply from MultiServicePro&body=Hi ${msg.name},%0D%0A%0D%0ARegarding your message:%0D%0A"${msg.message}"%0D%0A%0D%0A`}
+                          className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-2 rounded-full transition flex items-center justify-center"
+                          title="Reply via Email"
                         >
-                          {updatingId === msg.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                        </button>
-                      ) : (
-                        <span className="text-xs font-bold text-gray-400 uppercase">Read</span>
-                      )}
+                          <Reply className="w-4 h-4" />
+                        </a>
+
+                        {msg.status === 'New' && (
+                          <button 
+                            onClick={() => markMessageRead(msg.id)}
+                            disabled={updatingId === msg.id}
+                            className="bg-gray-100 hover:bg-green-100 text-gray-600 hover:text-green-700 p-2 rounded-full transition"
+                            title="Mark as Read"
+                          >
+                            {updatingId === msg.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
