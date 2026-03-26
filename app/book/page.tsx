@@ -14,27 +14,24 @@ export default function BookAppointmentPage() {
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null); // To hold the logged-in client's ID
+  const [userId, setUserId] = useState<string | null>(null);
   
   const router = useRouter();
 
-  // 1. Check if the person booking is a logged-in client
   useEffect(() => {
     const checkCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        setUserId(user.id); // Save their ID so we can attach it to the booking!
+        setUserId(user.id);
       }
     };
     checkCurrentUser();
   }, []);
 
-  // 2. Handle the Form Submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Insert data into Supabase, attaching the user_id if they are logged in
     const { error } = await supabase.from('bookings').insert([
       {
         full_name: fullName,
@@ -43,7 +40,7 @@ export default function BookAppointmentPage() {
         preferred_date: preferredDate,
         preferred_time: preferredTime,
         status: 'Pending',
-        user_id: userId // This is the magic link!
+        user_id: userId
       }
     ]);
 
@@ -53,8 +50,6 @@ export default function BookAppointmentPage() {
       alert("Something went wrong: " + error.message);
     } else {
       setSuccess(true);
-      
-      // If they are a logged-in client, send them straight to their dashboard after 2 seconds
       if (userId) {
         setTimeout(() => {
           router.push("/client-dashboard");
@@ -63,7 +58,6 @@ export default function BookAppointmentPage() {
     }
   };
 
-  // 3. Success Screen
   if (success) {
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -84,13 +78,11 @@ export default function BookAppointmentPage() {
     );
   }
 
-  // 4. Booking Form
   return (
     <main className="min-h-screen bg-gray-50 py-16 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
           
-          {/* Form Header */}
           <div className="bg-blue-900 p-8 md:p-10 text-white text-center">
             <Wrench className="w-12 h-12 text-green-400 mx-auto mb-4" />
             <h1 className="text-3xl font-extrabold mb-2">Book a Service</h1>
@@ -101,7 +93,6 @@ export default function BookAppointmentPage() {
             </p>
           </div>
 
-          {/* The Form */}
           <div className="p-8 md:p-10">
             <form onSubmit={handleSubmit} className="space-y-6">
               
@@ -110,9 +101,10 @@ export default function BookAppointmentPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                   <div className="relative">
                     <User className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                    {/* ADDED: text-gray-900 bg-white */}
                     <input 
                       type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none"
+                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none text-gray-900 bg-white placeholder-gray-400 font-medium"
                       placeholder="John Doe"
                     />
                   </div>
@@ -122,9 +114,10 @@ export default function BookAppointmentPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                    {/* ADDED: text-gray-900 bg-white */}
                     <input 
                       type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none"
+                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none text-gray-900 bg-white placeholder-gray-400 font-medium"
                       placeholder="0700 000 000"
                     />
                   </div>
@@ -133,9 +126,10 @@ export default function BookAppointmentPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Service Required</label>
+                {/* ADDED: text-gray-900 bg-white */}
                 <select 
                   value={service} onChange={(e) => setService(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none bg-white"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none text-gray-900 bg-white font-medium"
                 >
                   <option value="IT Support">IT Support & Networking</option>
                   <option value="Logistics">Logistics & Transport</option>
@@ -150,9 +144,10 @@ export default function BookAppointmentPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
                   <div className="relative">
                     <CalendarIcon className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                    {/* ADDED: text-gray-900 bg-white */}
                     <input 
                       type="date" required value={preferredDate} onChange={(e) => setPreferredDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none"
+                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none text-gray-900 bg-white font-medium"
                     />
                   </div>
                 </div>
@@ -161,9 +156,10 @@ export default function BookAppointmentPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
                   <div className="relative">
                     <Clock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                    {/* ADDED: text-gray-900 bg-white */}
                     <input 
                       type="time" required value={preferredTime} onChange={(e) => setPreferredTime(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none"
+                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 outline-none text-gray-900 bg-white font-medium"
                     />
                   </div>
                 </div>
