@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link"; // IMPORT ADDED FOR THE NEW BUTTON
 import { 
   Users, DollarSign, CalendarCheck, Activity, 
   ArrowUpRight, Loader2, LogOut, RefreshCw, CheckCircle 
@@ -85,7 +86,18 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-extrabold text-blue-900">Management Dashboard</h1>
             <p className="text-gray-500 mt-1">Logged in as: <span className="text-blue-600 font-medium">{user?.email}</span></p>
           </div>
-          <div className="flex gap-3">
+          
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3">
+            
+            {/* NEW: Quick Link to Marketing / Image Uploads */}
+            <Link 
+              href="/marketing"
+              className="bg-orange-50 text-orange-600 px-4 py-2.5 rounded-lg font-bold hover:bg-orange-600 hover:text-white transition flex items-center gap-2"
+            >
+              Go to Marketing Admin &rarr;
+            </Link>
+
             <button onClick={fetchBookings} className="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-bold hover:bg-gray-200 transition flex items-center gap-2">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </button>
