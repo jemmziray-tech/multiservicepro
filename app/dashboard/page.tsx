@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
-  Users, DollarSign, CalendarCheck, Activity, 
-  ArrowUpRight, Loader2, LogOut, RefreshCw, CheckCircle 
+  Users, DollarSign, CalendarCheck, MessageSquare, 
+  Loader2, LogOut, RefreshCw, Mail, Check
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]); // NEW: State for messages
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -25,18 +26,23 @@ export default function DashboardPage() {
         return;
       }
       setUser(user);
-      await fetchBookings();
+      await refreshData();
     };
     checkUserAndFetchData();
   }, [router]);
 
-  const fetchBookings = async () => {
+  // UPGRADED: Now fetches BOTH bookings and messages at the same time
+  const refreshData = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('bookings')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (data) setBookings(data);
+    
+    // Fetch Bookings
+    const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+    if (bData) setBookings(bData);
+
+    // Fetch Messages
+    const { data: mData } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
+    if (mData) setMessages(mData);
+
     setLoading(false);
   };
 
@@ -45,20 +51,21 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
+  // Update Booking Status
   const handleStatusChange = async (bookingId: number, newStatus: string) => {
     setUpdatingId(bookingId);
-    
-    const { error } = await supabase
-      .from('bookings')
-      .update({ status: newStatus })
-      .eq('id', bookingId);
+    const { error } = await supabase.from('bookings').update({ status: newStatus }).eq('id', bookingId);
+    if (error) alert("Failed to update status: " + error.message);
+    else setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
+    setUpdatingId(null);
+  };
 
-    if (error) {
-      alert("Failed to update status: " + error.message);
-    } else {
-      setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
-    }
-    
+  // NEW: Update Message Status (Mark as Read)
+  const markMessageRead = async (messageId: number) => {
+    setUpdatingId(messageId);
+    const { error } = await supabase.from('contact_messages').update({ status: 'Read' }).eq('id', messageId);
+    if (error) alert("Error: " + error.message);
+    else setMessages(messages.map(m => m.id === messageId ? { ...m, status: 'Read' } : m));
     setUpdatingId(null);
   };
 
@@ -73,22 +80,15 @@ export default function DashboardPage() {
 
   if (loading && !user) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-blue-600" /></div>;
 
-  // ==========================================
-  // 🧮 LIVE DASHBOARD MATH & STATISTICS
-  // ==========================================
-  
-  // 1. Total Bookings (Simple count)
+  // 🧮 LIVE DASHBOARD MATH
   const totalBookings = bookings.length;
-
-  // 2. Total Unique Clients (Count unique phone numbers)
   const uniqueClientsCount = new Set(bookings.map(b => b.phone)).size;
-
-  // 3. Estimated Revenue (Only count 'Completed' jobs, assume 150,000 TZS average)
   const completedJobsCount = bookings.filter(b => b.status === 'Completed').length;
   const estimatedRevenue = completedJobsCount * 150000;
-  
-  // Format the number so it looks like money (e.g., 150,000)
   const formattedRevenue = new Intl.NumberFormat('en-TZ').format(estimatedRevenue);
+  
+  // NEW MATH: Count how many messages say "New"
+  const unreadMessagesCount = messages.filter(m => m.status === 'New').length;
 
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
@@ -105,7 +105,7 @@ export default function DashboardPage() {
             <Link href="/marketing" className="bg-orange-50 text-orange-600 px-4 py-2.5 rounded-lg font-bold hover:bg-orange-600 hover:text-white transition flex items-center gap-2">
               Go to Marketing Admin &rarr;
             </Link>
-            <button onClick={fetchBookings} className="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-bold hover:bg-gray-200 transition flex items-center gap-2">
+            <button onClick={refreshData} className="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-bold hover:bg-gray-200 transition flex items-center gap-2">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </button>
             <button onClick={handleLogout} className="bg-red-50 text-red-600 px-4 py-2.5 rounded-lg font-bold hover:bg-red-600 hover:text-white transition flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* High-Level Statistics (NOW LIVE!) */}
+        {/* High-Level Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <h3 className="text-gray-500 text-sm font-medium">Earned Revenue</h3>
@@ -128,62 +128,113 @@ export default function DashboardPage() {
             <h3 className="text-gray-500 text-sm font-medium">Unique Clients</h3>
             <p className="text-2xl font-bold text-gray-900 mt-1">{uniqueClientsCount}</p>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h3 className="text-gray-500 text-sm font-medium">Website Visitors</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">1,204 <span className="text-xs text-gray-400 font-normal">(Est.)</span></p>
+          <div className={`bg-white p-6 rounded-2xl shadow-sm border ${unreadMessagesCount > 0 ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+            <h3 className="text-gray-500 text-sm font-medium">Unread Messages</h3>
+            <p className={`text-2xl font-bold mt-1 ${unreadMessagesCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+              {unreadMessagesCount} {unreadMessagesCount === 1 ? 'Message' : 'Messages'}
+            </p>
           </div>
         </div>
 
-        {/* LIVE Bookings Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-gray-900">Recent Service Requests</h2>
-          </div>
+        {/* The Two Main Tables Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 text-sm uppercase tracking-wider">
-                  <th className="p-4 font-medium">Client Name</th>
-                  <th className="p-4 font-medium">Service</th>
-                  <th className="p-4 font-medium">Date / Time</th>
-                  <th className="p-4 font-medium">Phone</th>
-                  <th className="p-4 font-medium">Manage Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 text-gray-700 font-medium">
-                {bookings.length === 0 && !loading ? (
-                  <tr><td colSpan={5} className="p-8 text-center text-gray-400">No bookings found.</td></tr>
-                ) : (
-                  bookings.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50 transition">
-                      <td className="p-4">{item.full_name}</td>
-                      <td className="p-4 text-blue-600">{item.service}</td>
-                      <td className="p-4 text-sm">{item.preferred_date} at {item.preferred_time}</td>
-                      <td className="p-4 text-sm">{item.phone}</td>
-                      <td className="p-4 flex items-center gap-2">
-                        
-                        <select
-                          value={item.status || 'Pending'}
-                          onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                          disabled={updatingId === item.id}
-                          className={`appearance-none outline-none border px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider cursor-pointer transition ${getStatusColor(item.status || 'Pending')}`}
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Approved">Approved</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Completed">Completed</option>
-                        </select>
-                        
-                        {updatingId === item.id && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
-                        
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          {/* LEFT: Bookings Table (Slightly more compact) */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <CalendarCheck className="text-blue-600 w-5 h-5" /> Recent Bookings
+              </h2>
+            </div>
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 bg-white shadow-sm">
+                  <tr className="bg-white text-gray-500 text-xs uppercase tracking-wider">
+                    <th className="p-4 font-medium">Client</th>
+                    <th className="p-4 font-medium">Service</th>
+                    <th className="p-4 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 text-gray-700 text-sm">
+                  {bookings.length === 0 ? (
+                    <tr><td colSpan={3} className="p-8 text-center text-gray-400">No bookings yet.</td></tr>
+                  ) : (
+                    bookings.map((item) => (
+                      <tr key={item.id} className="hover:bg-gray-50 transition">
+                        <td className="p-4">
+                          <p className="font-bold text-gray-900">{item.full_name}</p>
+                          <p className="text-xs text-gray-500">{item.phone}</p>
+                          <p className="text-xs text-gray-400">{item.preferred_date}</p>
+                        </td>
+                        <td className="p-4 font-medium text-blue-600">{item.service}</td>
+                        <td className="p-4">
+                          <select
+                            value={item.status || 'Pending'}
+                            onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                            disabled={updatingId === item.id}
+                            className={`appearance-none outline-none border px-2 py-1 rounded-full text-xs font-bold uppercase cursor-pointer ${getStatusColor(item.status || 'Pending')}`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {/* RIGHT: Client Inbox */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <MessageSquare className="text-orange-500 w-5 h-5" /> Client Inbox
+              </h2>
+            </div>
+            
+            <div className="p-4 space-y-4 max-h-[500px] overflow-y-auto bg-gray-50">
+              {messages.length === 0 ? (
+                <div className="text-center p-8 text-gray-400">No messages found.</div>
+              ) : (
+                messages.map((msg) => (
+                  <div key={msg.id} className={`bg-white p-5 rounded-xl border shadow-sm transition-all ${msg.status === 'New' ? 'border-blue-300 border-l-4 border-l-blue-600' : 'border-gray-200 opacity-75'}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                          {msg.name} {msg.status === 'New' && <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">New</span>}
+                        </h3>
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-1"><Mail className="w-3 h-3" /> {msg.email} • {msg.phone || 'No phone'}</p>
+                      </div>
+                      
+                      {/* Action Button: Mark as Read */}
+                      {msg.status === 'New' ? (
+                        <button 
+                          onClick={() => markMessageRead(msg.id)}
+                          disabled={updatingId === msg.id}
+                          className="bg-gray-100 hover:bg-green-100 text-gray-600 hover:text-green-700 p-2 rounded-full transition"
+                          title="Mark as Read"
+                        >
+                          {updatingId === msg.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        </button>
+                      ) : (
+                        <span className="text-xs font-bold text-gray-400 uppercase">Read</span>
+                      )}
+                    </div>
+                    
+                    <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <p className="text-xs font-bold text-gray-400 uppercase mb-1 border-b pb-1">Interest: <span className="text-gray-700">{msg.service_interest}</span></p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{msg.message}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
         </div>
 
       </div>
