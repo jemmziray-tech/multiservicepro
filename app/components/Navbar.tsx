@@ -33,6 +33,12 @@ export default function Navbar() {
           {/* Desktop Staff/Actions (Hidden on Mobile) */}
           <div className="hidden lg:flex items-center space-x-4 border-l pl-6 border-gray-200">
             <Link href="/dashboard" className="text-xs text-gray-400 hover:text-blue-600 font-bold uppercase">CEO</Link>
+            
+            {/* NEW: Client Portal Link */}
+            <Link href="/client-login" className="text-gray-600 font-bold hover:text-blue-600 text-sm transition px-2">
+              Client Portal
+            </Link>
+
             <Link href="/book" className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition">
               Book Now
             </Link>
@@ -56,7 +62,11 @@ export default function Navbar() {
           <Link href="/about" onClick={toggleMenu} className="block text-gray-700 font-medium">About Us</Link>
           <Link href="/contact" onClick={toggleMenu} className="block text-gray-700 font-medium">Contact</Link>
           <hr />
-          <Link href="/dashboard" onClick={toggleMenu} className="block text-blue-600 font-bold">Staff Dashboard</Link>
+          
+          {/* NEW: Client Portal Link for Mobile */}
+          <Link href="/client-login" onClick={toggleMenu} className="block text-blue-600 font-bold">Client Portal</Link>
+          <Link href="/dashboard" onClick={toggleMenu} className="block text-gray-500 font-medium">Staff Dashboard</Link>
+          
           <Link href="/book" onClick={toggleMenu} className="block bg-blue-600 text-white text-center py-3 rounded-lg font-bold">
             Book Appointment
           </Link>
