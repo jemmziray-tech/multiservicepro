@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion"; // For smooth animations
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, DollarSign, CalendarCheck, MessageSquare, 
   Loader2, LogOut, RefreshCw, Mail, Check, Reply 
@@ -73,12 +73,13 @@ export default function DashboardPage() {
     setUpdatingId(null);
   };
 
+  // The perfectly styled status colors for Day AND Night mode
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Completed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
       case 'In Progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800';
       case 'Approved': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800';
-      default: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800';
+      default: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-500 border-yellow-200 dark:border-yellow-700'; 
     }
   };
 
@@ -155,7 +156,7 @@ export default function DashboardPage() {
             </div>
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="sticky top-0 bg-white dark:bg-gray-900 shadow-sm">
+                <thead className="sticky top-0 bg-white dark:bg-gray-900 shadow-sm z-10">
                   <tr className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
                     <th className="p-4 font-medium">Client</th>
                     <th className="p-4 font-medium">Service</th>
@@ -175,12 +176,13 @@ export default function DashboardPage() {
                           value={item.status || 'Pending'}
                           onChange={(e) => handleStatusChange(item.id, e.target.value)}
                           disabled={updatingId === item.id}
-                          className={`appearance-none outline-none border px-2 py-1 rounded-full text-xs font-bold uppercase cursor-pointer ${getStatusColor(item.status || 'Pending')}`}
+                          className={`appearance-none outline-none border px-3 py-1.5 rounded-full text-xs font-bold uppercase cursor-pointer transition-colors ${getStatusColor(item.status || 'Pending')}`}
                         >
-                          <option value="Pending">Pending</option>
-                          <option value="Approved">Approved</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Completed">Completed</option>
+                          {/* THE FIX: Explicit styling for the dropdown menu items */}
+                          <option value="Pending" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Pending</option>
+                          <option value="Approved" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Approved</option>
+                          <option value="In Progress" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">In Progress</option>
+                          <option value="Completed" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Completed</option>
                         </select>
                       </td>
                     </tr>
