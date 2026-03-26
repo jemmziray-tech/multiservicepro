@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // IMPORT ADDED FOR THE NEW BUTTON
+import Link from "next/link";
 import { 
   Users, DollarSign, CalendarCheck, Activity, 
   ArrowUpRight, Loader2, LogOut, RefreshCw, CheckCircle 
@@ -13,7 +13,7 @@ export default function DashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [updatingId, setUpdatingId] = useState<number | null>(null); // Tracks which row is loading
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -45,9 +45,8 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
-  // NEW: Function to update the status in the database!
   const handleStatusChange = async (bookingId: number, newStatus: string) => {
-    setUpdatingId(bookingId); // Show a loading spinner on this specific row
+    setUpdatingId(bookingId);
     
     const { error } = await supabase
       .from('bookings')
@@ -57,24 +56,39 @@ export default function DashboardPage() {
     if (error) {
       alert("Failed to update status: " + error.message);
     } else {
-      // If successful, update our local screen immediately so we don't have to refresh
       setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
     }
     
-    setUpdatingId(null); // Turn off the spinner
+    setUpdatingId(null);
   };
 
-  // Helper function to color-code statuses
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Completed': return 'bg-green-100 text-green-800 border-green-200';
       case 'In Progress': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'Approved': return 'bg-purple-100 text-purple-800 border-purple-200';
-      default: return 'bg-yellow-100 text-yellow-800 border-yellow-200'; // Pending
+      default: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     }
   };
 
   if (loading && !user) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-blue-600" /></div>;
+
+  // ==========================================
+  // 🧮 LIVE DASHBOARD MATH & STATISTICS
+  // ==========================================
+  
+  // 1. Total Bookings (Simple count)
+  const totalBookings = bookings.length;
+
+  // 2. Total Unique Clients (Count unique phone numbers)
+  const uniqueClientsCount = new Set(bookings.map(b => b.phone)).size;
+
+  // 3. Estimated Revenue (Only count 'Completed' jobs, assume 150,000 TZS average)
+  const completedJobsCount = bookings.filter(b => b.status === 'Completed').length;
+  const estimatedRevenue = completedJobsCount * 150000;
+  
+  // Format the number so it looks like money (e.g., 150,000)
+  const formattedRevenue = new Intl.NumberFormat('en-TZ').format(estimatedRevenue);
 
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
@@ -87,17 +101,10 @@ export default function DashboardPage() {
             <p className="text-gray-500 mt-1">Logged in as: <span className="text-blue-600 font-medium">{user?.email}</span></p>
           </div>
           
-          {/* Action Buttons */}
           <div className="flex flex-wrap gap-3">
-            
-            {/* NEW: Quick Link to Marketing / Image Uploads */}
-            <Link 
-              href="/marketing"
-              className="bg-orange-50 text-orange-600 px-4 py-2.5 rounded-lg font-bold hover:bg-orange-600 hover:text-white transition flex items-center gap-2"
-            >
+            <Link href="/marketing" className="bg-orange-50 text-orange-600 px-4 py-2.5 rounded-lg font-bold hover:bg-orange-600 hover:text-white transition flex items-center gap-2">
               Go to Marketing Admin &rarr;
             </Link>
-
             <button onClick={fetchBookings} className="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-bold hover:bg-gray-200 transition flex items-center gap-2">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </button>
@@ -107,15 +114,27 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* High-Level Statistics */}
+        {/* High-Level Statistics (NOW LIVE!) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Monthly Revenue</h3><p className="text-2xl font-bold text-gray-900 mt-1">TZS 4,500,000</p></div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Total Bookings</h3><p className="text-2xl font-bold text-gray-900 mt-1">{bookings.length} Requests</p></div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Total Clients</h3><p className="text-2xl font-bold text-gray-900 mt-1">156</p></div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 className="text-gray-500 text-sm font-medium">Website Visitors</h3><p className="text-2xl font-bold text-gray-900 mt-1">1,204</p></div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h3 className="text-gray-500 text-sm font-medium">Earned Revenue</h3>
+            <p className="text-2xl font-bold text-green-600 mt-1">TZS {formattedRevenue}</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h3 className="text-gray-500 text-sm font-medium">Total Bookings</h3>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{totalBookings} Requests</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h3 className="text-gray-500 text-sm font-medium">Unique Clients</h3>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{uniqueClientsCount}</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h3 className="text-gray-500 text-sm font-medium">Website Visitors</h3>
+            <p className="text-2xl font-bold text-gray-900 mt-1">1,204 <span className="text-xs text-gray-400 font-normal">(Est.)</span></p>
+          </div>
         </div>
 
-        {/* LIVE Bookings Table with Interactive Statuses */}
+        {/* LIVE Bookings Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-xl font-bold text-gray-900">Recent Service Requests</h2>
@@ -144,7 +163,6 @@ export default function DashboardPage() {
                       <td className="p-4 text-sm">{item.phone}</td>
                       <td className="p-4 flex items-center gap-2">
                         
-                        {/* INTERACTIVE STATUS DROPDOWN */}
                         <select
                           value={item.status || 'Pending'}
                           onChange={(e) => handleStatusChange(item.id, e.target.value)}
@@ -157,7 +175,6 @@ export default function DashboardPage() {
                           <option value="Completed">Completed</option>
                         </select>
                         
-                        {/* Show a spinner next to the dropdown if this specific row is updating */}
                         {updatingId === item.id && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
                         
                       </td>
