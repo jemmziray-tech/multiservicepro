@@ -24,6 +24,7 @@ export default function Navbar() {
           {/* Main Menu (Desktop Only) */}
           <div className="hidden md:flex space-x-6">
             <Link href="/services" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition">Our Services</Link>
+            <Link href="/shop" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition">Shop</Link>
             <Link href="/blog" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition">Blog</Link>
             <Link href="/gallery" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition">Gallery</Link>
             <Link href="/about" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition">About Us</Link>
@@ -56,6 +57,7 @@ export default function Navbar() {
       {isOpen && (
         <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 p-4 space-y-4 shadow-xl">
           <Link href="/services" onClick={toggleMenu} className="block text-gray-700 dark:text-gray-300 font-medium">Our Services</Link>
+          <Link href="/shop" onClick={toggleMenu} className="block text-gray-700 dark:text-gray-300 font-medium">Shop</Link>
           <Link href="/blog" onClick={toggleMenu} className="block text-gray-700 dark:text-gray-300 font-medium">Blog</Link>
           <Link href="/gallery" onClick={toggleMenu} className="block text-gray-700 dark:text-gray-300 font-medium">Gallery</Link>
           <Link href="/about" onClick={toggleMenu} className="block text-gray-700 dark:text-gray-300 font-medium">About Us</Link>
