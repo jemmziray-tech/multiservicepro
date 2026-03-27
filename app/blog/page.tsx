@@ -1,3 +1,5 @@
+"use client";
+
 import { Calendar, User, ArrowRight, Tag } from "lucide-react";
 import Link from "next/link";
 
@@ -33,13 +35,15 @@ export default function BlogPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-gray-50 py-16 px-4">
+    <main className="min-h-screen bg-gray-50 py-32 px-4 transition-colors duration-500 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-extrabold text-blue-900 mb-4">Company News & Insights</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900 dark:text-white tracking-tight mb-4">
+            Company News & Insights
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Stay updated with the latest trends and stories from MultiServicePro across all our sectors.
           </p>
         </div>
@@ -47,31 +51,32 @@ export default function BlogPage() {
         {/* Blog Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {posts.map((post) => (
-            <article key={post.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition duration-300 flex flex-col">
+            <article key={post.id} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-xl transition duration-300 flex flex-col group">
               
               {/* Featured Image Placeholder */}
-              <div className={`${post.imageColor} h-48 flex items-center justify-center text-white`}>
-                <Tag className="w-12 h-12 opacity-50" />
+              <div className={`${post.imageColor} h-48 flex items-center justify-center text-white relative overflow-hidden`}>
+                <Tag className="w-12 h-12 opacity-50 transform group-hover:scale-110 transition-transform duration-500" />
               </div>
 
               <div className="p-6 flex flex-col flex-grow">
                 {/* Category Badge */}
                 <div className="mb-4">
-                  <span className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  <span className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                     {post.category}
                   </span>
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-900 mb-3 hover:text-blue-600 transition cursor-pointer">
+                {/* Title */}
+                <Link href={`/blog/${post.id}`} className="text-2xl font-bold text-gray-900 dark:text-white mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer">
                   {post.title}
-                </h2>
+                </Link>
 
-                <p className="text-gray-600 mb-6 line-clamp-3">
+                <p className="text-gray-600 dark:text-gray-400 mb-6 line-clamp-3">
                   {post.excerpt}
                 </p>
 
                 {/* Meta Data */}
-                <div className="mt-auto pt-6 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+                <div className="mt-auto pt-6 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     {post.date}
@@ -82,9 +87,10 @@ export default function BlogPage() {
                   </div>
                 </div>
 
-                <button className="mt-6 flex items-center gap-2 text-blue-600 font-bold hover:gap-3 transition-all">
+                {/* THE MAGIC LINK (This is what connects to Step 2) */}
+                <Link href={`/blog/${post.id}`} className="mt-6 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold hover:gap-3 transition-all">
                   Read Full Story <ArrowRight className="w-4 h-4" />
-                </button>
+                </Link>
               </div>
             </article>
           ))}
