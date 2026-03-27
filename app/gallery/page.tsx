@@ -33,7 +33,7 @@ export default function GalleryPage() {
   const [activeFilter, setActiveFilter] = useState("All");
   
   // --- WHATSAPP LOGIC ---
-  const whatsappNumber = "255700000000"; // REPLACE WITH YOUR REAL NUMBER
+  const whatsappNumber = "255743924467"; // REPLACE WITH YOUR REAL NUMBER
 
   const handleInquiry = (itemName: string) => {
     const message = `Hello MultiServicePro, I am interested in the *${itemName}* I saw in your Product Gallery. Is it still available?`;
