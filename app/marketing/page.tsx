@@ -2,15 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  PlusCircle, 
-  Image as ImageIcon, 
-  Tag, 
-  DollarSign, 
-  Loader2, 
-  CheckCircle, 
-  UploadCloud 
-} from "lucide-react";
+import { PlusCircle, Image as ImageIcon, Tag, Loader2, CheckCircle, UploadCloud } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export default function MarketingPage() {
@@ -135,11 +127,18 @@ export default function MarketingPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price</label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                  <input type="text" required value={price} onChange={(e) => setPrice(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-orange-500 outline-none text-gray-900 dark:text-white dark:bg-gray-800 font-medium" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price</label>
+              <div className="relative">
+                {/* Swapped the Dollar Icon for TZS text */}
+                <span className="absolute left-4 top-3.5 text-gray-500 dark:text-gray-400 font-bold text-sm">TZS</span>
+                <input 
+                  type="text" 
+                  required 
+                  value={price} 
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="150,000"
+                  className="w-full pl-14 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-orange-500 outline-none text-gray-900 dark:text-white dark:bg-gray-800 font-medium" 
+                />
                 </div>
               </div>
 
