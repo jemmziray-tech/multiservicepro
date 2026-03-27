@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { 
-  Truck, Monitor, Tractor, Wrench, Calendar, 
-  Clock, User, Phone, ChevronRight, ChevronLeft, CheckCircle, Loader2 
+  Truck, Monitor, Tractor, Wrench, ChevronRight, ChevronLeft, 
+  CheckCircle, Loader2, Smartphone, CreditCard, Banknote, CheckCircle2 
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -118,7 +118,7 @@ export default function BookingWizard() {
         <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-gray-800 p-8 md:p-10 relative overflow-hidden min-h-[450px]">
           <AnimatePresence mode="wait" custom={direction}>
             
-            {/* STEP 1 */}
+            {/* STEP 1: Service */}
             {step === 1 && (
               <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-6">
                 <h2 className="text-xl font-bold text-gray-400 uppercase tracking-widest text-center">Step 1: Service</h2>
@@ -141,7 +141,7 @@ export default function BookingWizard() {
               </motion.div>
             )}
 
-            {/* STEP 2 */}
+            {/* STEP 2: Timing */}
             {step === 2 && (
               <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-6">
                 <h2 className="text-xl font-bold text-gray-400 uppercase tracking-widest text-center">Step 2: Timing</h2>
@@ -167,14 +167,18 @@ export default function BookingWizard() {
               </motion.div>
             )}
 
-            {/* STEP 3 */}
+            {/* STEP 3: Contact & Payment */}
             {step === 3 && (
               <motion.div key="step3" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-6">
-                <h2 className="text-xl font-bold text-gray-400 uppercase tracking-widest text-center">Step 3: Contact</h2>
+                <h2 className="text-xl font-bold text-gray-400 uppercase tracking-widest text-center">Step 3: Contact & Pay</h2>
+                
+                {/* Contact Inputs */}
                 <div className="space-y-4">
                   <input placeholder="Full Name" type="text" required value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} className="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-blue-600 font-medium" />
                   <input placeholder="Phone (+255...)" type="tel" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-blue-600 font-medium" />
                 </div>
+
+                {/* Booking Summary */}
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-2xl border border-blue-100 dark:border-blue-800 flex justify-between items-center">
                     <div>
                         <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Estimated Total</p>
@@ -185,10 +189,62 @@ export default function BookingWizard() {
                         <p>{formData.date}</p>
                     </div>
                 </div>
+
+                {/* THE NEW PAYMENT UI */}
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest ml-2">Payment Method</h3>
+                  
+                  {/* Active: Pay in Person */}
+                  <div className="relative border-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-blue-100 dark:bg-blue-800 p-2 rounded-full text-blue-600 dark:text-blue-400">
+                        <Banknote className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900 dark:text-white text-sm">Pay via WhatsApp / Office</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Pay after confirming details</p>
+                      </div>
+                    </div>
+                    <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+
+                  {/* Disabled: Mobile Money */}
+                  <div className="relative border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 flex items-center justify-between opacity-60 cursor-not-allowed">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-gray-200 dark:bg-gray-800 p-2 rounded-full text-gray-500 dark:text-gray-400">
+                        <Smartphone className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-700 dark:text-gray-300 text-sm">Mobile Money</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">M-Pesa, Tigo Pesa, Airtel</p>
+                      </div>
+                    </div>
+                    <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full border border-orange-200 dark:border-orange-800/50">
+                      Coming Soon
+                    </span>
+                  </div>
+
+                  {/* Disabled: Bank Card */}
+                  <div className="relative border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 flex items-center justify-between opacity-60 cursor-not-allowed">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-gray-200 dark:bg-gray-800 p-2 rounded-full text-gray-500 dark:text-gray-400">
+                        <CreditCard className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-700 dark:text-gray-300 text-sm">Bank Card</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Visa, Mastercard</p>
+                      </div>
+                    </div>
+                    <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full border border-orange-200 dark:border-orange-800/50">
+                      Coming Soon
+                    </span>
+                  </div>
+                </div>
+
                 <div className="flex gap-4 pt-4">
                   <button onClick={prevStep} className="flex-1 py-4 font-bold text-gray-400 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition"><ChevronLeft className="w-5 h-5" /> Back</button>
                   <button onClick={handleBooking} disabled={loading || !formData.phone || !formData.fullName} className="flex-1 bg-green-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-green-700 transition disabled:opacity-50 shadow-lg">
-                    {loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Confirm & Pay"}
+                    {loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Confirm Booking"}
                   </button>
                 </div>
               </motion.div>
